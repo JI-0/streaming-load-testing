@@ -10,7 +10,7 @@
 ##################################################
 
 import os
-from locust import HttpLocust, TaskSet, task, between
+from locust import HttpUser, TaskSet, task, between
 import m3u8
 import logging
 import resource
@@ -67,7 +67,7 @@ class PlayerTaskSet(TaskSet):
             self._sleep(sleep)
 
 
-class MyLocust(HttpLocust):
+class MyLocust(HttpUser):
     host = os.getenv('HOST_URL', "http://localhost")
-    task_set = PlayerTaskSet
+    tasks = [PlayerTaskSet]
     wait_time = between(0, 0)

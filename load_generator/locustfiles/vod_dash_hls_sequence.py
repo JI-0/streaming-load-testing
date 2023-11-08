@@ -1,7 +1,6 @@
 import sys
 import os
-from locust import HttpLocust, between, TaskSequence
-# seq_task
+from locust import HttpUser, between, SequentialTaskSet, task
 # from load_generator.common.dash_emulation import class_dash_player
 from load_generator.common.dash_emulation import class_dash_player
 from load_generator.common.hls_emulation import class_hls_player
@@ -21,10 +20,11 @@ resource.setrlimit(resource.RLIMIT_NOFILE, resource.getrlimit(resource.RLIMIT_NO
 MANIFEST_FILE = os.getenv('MANIFEST_FILE')
 
 
-class Client(TaskSequence):
+class Client(SequentialTaskSet):
     """
     Verifies if it is a MPEG-DASH or HLS manifest
     """
+    @task
     def on_start(self):
         base_url = f"{self.locust.host}/{MANIFEST_FILE}"
         self.base_url = base_url
@@ -58,7 +58,7 @@ class Client(TaskSequence):
                 os._exit(1)
 
 
-class MyLocust(HttpLocust):
+class MyLocust(HttpUser):
     host = os.getenv('HOST_URL', "http://localhost")
-    task_set = Client
+    tasks = [Client]
     wait_time = between(0, 0)

@@ -1,6 +1,6 @@
 import os
 import sys
-from locust import HttpLocust, between, seq_task, TaskSequence
+from locust import HttpUser, between, task, SequentialTaskSet
 from mpegdash.parser import MPEGDASHParser
 from load_generator.common import dash_utils
 from load_generator.config import default  # ENV configuration
@@ -19,7 +19,7 @@ resource.setrlimit(resource.RLIMIT_NOFILE, resource.getrlimit(
 MANIFEST_FILE = os.getenv('MANIFEST_FILE')
 
 
-class UserBehaviour(TaskSequence):
+class UserBehaviour(SequentialTaskSet):
     """
     Example task sequences with global values
     """
@@ -27,7 +27,7 @@ class UserBehaviour(TaskSequence):
     mpd_body = None
     mpd_object = None
 
-    @seq_task(1)
+    @task
     def get_manifest(self):
         """
         Retrieve the MPD manifest file
@@ -48,14 +48,14 @@ class UserBehaviour(TaskSequence):
             except SystemExit:
                 os._exit(1)
 
-    @seq_task(2)
+    @task
     def dash_parse(self):
         """
         Parse Manifest file to MPEGDASHParser
         """
         self.mpd_object = MPEGDASHParser.parse(self.mpd_body)
 
-    @seq_task(3)
+    @task
     def dash_playback(self):
         """
         Create a list of the avaialble segment URIs with
@@ -88,7 +88,7 @@ class UserBehaviour(TaskSequence):
             )
 
 
-class MyLocust(HttpLocust):
+class MyLocust(HttpUser):
     host = os.getenv('HOST_URL', "http://localhost")
-    task_set = UserBehaviour
+    tasks = [UserBehaviour]
     wait_time = between(0, 0)

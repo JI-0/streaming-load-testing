@@ -1,12 +1,12 @@
 import os
 import sys
 import logging
-from locust import TaskSequence, seq_task, TaskSet, task
+from locust import SequentialTaskSet, TaskSet, task
 from mpegdash.parser import MPEGDASHParser
 from load_generator.common import dash_utils
 from load_generator.config import default
 import random
-from locust.exception import StopLocust
+# from locust.exception import StopLocust
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ BITRATE = os.getenv("bitrate")
 LOGGER = True
 
 
-class class_dash_player(TaskSet):
+class class_dash_player(SequentialTaskSet):
     """
     Simple MPEG-DASH emulation of a player
     Receives an MPEG-DASH /.mpd manifest
@@ -29,7 +29,7 @@ class class_dash_player(TaskSet):
     mpd_object = None
     print("started task")
 
-    @seq_task(1)
+    @task
     def get_manifest(self):
         print("MPEG-DASH child player running ...")
         base_url = f"{self.locust.host}/{MANIFEST_FILE}"
@@ -48,7 +48,7 @@ class class_dash_player(TaskSet):
         else:
             pass
 
-    @seq_task(2)
+    @task
     def dash_parse(self, reschedule=True):
         """
         Parse Manifest file to MPEGDASHParser
@@ -61,7 +61,7 @@ class class_dash_player(TaskSet):
             # self.interrupt()
             pass
 
-    @seq_task(3)
+    @task
     def dash_playback(self):
         """
         Create a list of the avaialble segment URIs with
